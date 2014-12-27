@@ -1,7 +1,8 @@
 package du.cs.ds;
 
 /**
- * Another HashTable implementation
+ * A HashTable implementation, that uses separate
+ * chaining to deal with collisions
  * This class is not thread-safe
  * @author david.uvalle@gmail.com
  *
@@ -9,20 +10,22 @@ package du.cs.ds;
  * @param <V> value type
  */
 public class HashTable<K, V> {
-        
+
+    // Default starting table size
     private static final int DEFAULT_SIZE = 10;
+    // Load factor required to resize and rehash
     private static final float LOAD_FACTOR = 0.7f;
     
     /**
      * Represents an element to be stored in a HashTable
      * @author david.uvalle@gmail.com
      *
-     * @param <K> key
-     * @param <V> value
+     * @param <K> key a key 
+     * @param <V> value a value 
      */
-    private static class Entry<K, V> {
-        private final K key;
-        private final V value;
+    public static class Entry<K, V> {
+        private K key;
+        private V value;
         private Entry<K, V> next;
         
         public Entry(K key, V value) {
@@ -36,6 +39,10 @@ public class HashTable<K, V> {
         
         public V getValue() {
             return this.value;
+        }
+        
+        public void setValue(V value) {
+            this.value = value;
         }
         
         public void setNext(Entry<K, V> next) {
@@ -75,22 +82,22 @@ public class HashTable<K, V> {
      */
     public void put(K key, V value) {
         
-        int index = getIndex(key);
-        
-        entriesSize++;
+        if (key == null || value == null) {
+            return;
+        }
         
         float load = (float) entriesSize / bucketsSize;
         
         if (load >= LOAD_FACTOR) {
             // Double the array size
-            resizeArray(table.length * 2);
-            // Rehash for this element
-            index = getIndex(key);
+            resizeArray(bucketsSize * 2);
         }
         
         Entry<K, V> entry = new Entry<K, V>(key, value);
+        int index = getIndex(key);
         
         insertElement(table, index, entry);
+        entriesSize++;
     }
     
     /**
@@ -98,17 +105,57 @@ public class HashTable<K, V> {
      * @param key element key
      * @return the element value
      */
+    @SuppressWarnings("unchecked")
     public V remove(K key) {
-        /**
-         * This method will do two things
-         * 1 - If there are no collisions, just remove the first element making it null,
-         * In case of collisions, find the element in the list and remove it, the first position
-         * should be an special case
-         * 2 - If after removing an element we find that the load factor is very low
-         * (less than 0.3) then we should be able to decrease the array size by 50%
-         */
         
-        return null;
+        if (key == null || !containsKey(key)) {
+            return null;
+        }
+        
+        int index = getIndex(key);
+        
+        Entry<K, V> entry = (Entry<K, V>) table[index];
+        Entry<K, V> current = entry;
+        
+        if (current.getKey().equals(key)) {
+            
+            if (current.getNext() != null)
+            {
+                table[index] = current.getNext();
+            }
+            else
+            {
+                table[index] = null;
+            }
+        }
+        else {
+            
+            Entry<K, V> last = null;
+            
+            while (!current.getKey().equals(key)) {
+                last = current;
+                current = current.getNext();
+            }
+            
+            if (current.getNext() != null) {
+                last.setNext(current.getNext());
+                current.setNext(null);
+            }
+            else {
+                last.setNext(null);
+            }
+        }
+        
+        entriesSize--;
+        
+        float load = (float) entriesSize / bucketsSize;
+
+        // Shrink the table if it's not used
+        if (load <= 0.3f) {
+            resizeArray(table.length / 2);
+        }
+        
+        return current.getValue();
     }
     
     /**
@@ -117,6 +164,10 @@ public class HashTable<K, V> {
      * @return true if the element exists, false otherwise
      */
     public boolean containsKey(K key) {
+        
+        if (key == null) {
+            return false;
+        }
         
         int index = getIndex(key);
         
@@ -130,6 +181,10 @@ public class HashTable<K, V> {
      */
     @SuppressWarnings("unchecked")
     public V get(K key) {
+        
+        if (key == null) {
+            return null;
+        }
         
         int index = getIndex(key);
         
@@ -169,14 +224,28 @@ public class HashTable<K, V> {
         
         if (table[index] != null) {
             
+            boolean addToEnd = true;
+            
             Entry<K, V> current = (Entry<K, V>)table[index];
             
-            // Separate chaining to deal with collisions
-            while (current.getNext() != null) {
-                current = current.getNext();
+            if (current.getKey().equals(entry.getKey())) {
+                current.setValue(entry.getValue());
             }
-            
-            current.setNext(entry);
+            else {
+                while (current.getNext() != null) {
+                    if (current.getNext().getKey().equals(entry.getKey())) {
+                        current.getNext().setValue(entry.getValue());
+                        addToEnd = false;
+                        break;
+                    }
+                    
+                    current = current.getNext();
+                }
+                
+                if (addToEnd) {
+                    current.setNext(entry);
+                }
+            }
         }
         else {
             table[index] = entry;
@@ -196,13 +265,29 @@ public class HashTable<K, V> {
         for (int i = 0; i < table.length; i++) {
             
             if (table[i] != null) {
+                // Simple insert
                 Entry<K, V> entry = (Entry<K, V>) table[i];
-                int index = getIndex(entry.getKey());
-                insertElement(newTable, index, entry);
+                
+                if (entry.getNext() == null) {
+                    int index = getIndex(entry.getKey());
+                    insertElement(newTable, index, entry);
+                }
+                else {
+                    Entry<K, V> current = entry;
+                    Entry<K, V> next = null;
+                    
+                    while (current != null) {
+                        next = current.getNext();
+                        current.setNext(null);
+                        int index = getIndex(current.getKey());
+                        insertElement(newTable, index, current);
+                        current = next;
+                    }
+                    
+                }
+                
+                table[i] = null;
             }
-            
-            // free elements from the old table;
-            table[i] = null;
         }
         
         table = newTable;
@@ -215,5 +300,67 @@ public class HashTable<K, V> {
      */
     private int getIndex(K key) {
         return key.hashCode() % bucketsSize;
+    }
+    
+    /**
+     * Returns the size of the hashtable
+     * @return size size of the hashtable
+     */
+    public int size() {
+        return entriesSize;
+    }
+    
+    /**
+     * Gets the entries set from the table as an array
+     * @return an array containing all of the entries
+     */
+    @SuppressWarnings("unchecked")
+    public Entry<K, V>[] entrySet() {
+        Entry<K, V>[] entries = new Entry[entriesSize];
+        int count = 0;
+        
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] != null) {
+                Entry<K, V> entry = (Entry<K, V>) table[i];
+                entries[count++] = entry;
+                
+                while (entry.getNext() != null) {
+                    entries[count++] = entry.getNext();
+                    entry = entry.getNext();
+                }
+            }
+        }
+        
+        return entries;
+    }
+    
+    /**
+     * Gets an array of all the keys in the hashtable
+     * @return an array of keys in the hashtable
+     */
+    public Object[] keySet() {
+        Object[] keys = new Object[entriesSize];
+        
+        Entry<K, V>[] entries = entrySet();
+        int count = 0;
+        
+        for (Entry<K, V> entry : entries) {
+            keys[count++] = entry.getKey();
+        }
+        
+        return keys;
+    }
+    
+    /**
+     * Removes all the elements from the hashTable
+     */
+    @SuppressWarnings("unchecked")
+    public void clear() {
+        
+        Object[] keys = keySet();
+        
+        for (Object key : keys) {
+            this.remove((K)key);
+        }
     }
 }

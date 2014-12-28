@@ -89,6 +89,18 @@ public class HashTableTest {
     }
     
     @Test
+    public void testNullKey() {
+        hashTable.put(null, "default");
+        assertEquals("default", hashTable.get(null));
+    }
+    
+    @Test
+    public void testNullValue() {
+        hashTable.put("abc", null);
+        assertEquals(null, hashTable.get("abc"));
+    }
+    
+    @Test
     public void testKeySet() {
         addEntries(10);
         

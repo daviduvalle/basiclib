@@ -2,7 +2,8 @@ package du.cs.ds;
 
 /**
  * A HashTable implementation, that uses separate
- * chaining to deal with collisions
+ * chaining to deal with collisions, support a null
+ * key and null values
  * This class is not thread-safe
  * @author david.uvalle@gmail.com
  *
@@ -82,15 +83,11 @@ public class HashTable<K, V> {
      */
     public void put(K key, V value) {
         
-        if (key == null || value == null) {
-            return;
-        }
-        
         float load = (float) entriesSize / bucketsSize;
         
         if (load >= LOAD_FACTOR) {
             // Double the array size
-            resizeArray(bucketsSize * 2);
+            // resizeArray(bucketsSize * 2);
         }
         
         Entry<K, V> entry = new Entry<K, V>(key, value);
@@ -182,10 +179,6 @@ public class HashTable<K, V> {
     @SuppressWarnings("unchecked")
     public V get(K key) {
         
-        if (key == null) {
-            return null;
-        }
-        
         int index = getIndex(key);
         
         if (table[index] == null) {
@@ -194,14 +187,14 @@ public class HashTable<K, V> {
         
         Entry<K, V> current = (Entry<K, V>)table[index];
         
-        if (current.getKey().equals(key)) {
+        if ((current.getKey() == null && key == null) || current.getKey().equals(key)) {
             return current.getValue();
         }
         else {
             while (current.getNext() != null) {
                 current = current.getNext();
                 
-                if (current.getKey().equals(key))
+                if ((current.getKey() == null && key == null) || current.getKey().equals(key))
                 {
                     return current.getValue();
                 }
@@ -299,7 +292,10 @@ public class HashTable<K, V> {
      * @return an array index
      */
     private int getIndex(K key) {
-        return key.hashCode() % bucketsSize;
+        
+        int hashCode = key != null ? key.hashCode() : "null".hashCode();
+
+        return hashCode % bucketsSize;
     }
     
     /**

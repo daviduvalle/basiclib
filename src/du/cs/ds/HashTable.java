@@ -87,7 +87,7 @@ public class HashTable<K, V> {
         
         if (load >= LOAD_FACTOR) {
             // Double the array size
-            // resizeArray(bucketsSize * 2);
+            resizeArray(bucketsSize * 2);
         }
         
         Entry<K, V> entry = new Entry<K, V>(key, value);

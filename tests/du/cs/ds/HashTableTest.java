@@ -92,6 +92,7 @@ public class HashTableTest {
     public void testNullKey() {
         hashTable.put(null, "default");
         assertEquals("default", hashTable.get(null));
+        assertTrue(hashTable.containsKey(null));
     }
     
     @Test

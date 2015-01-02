@@ -105,7 +105,7 @@ public class HashTable<K, V> {
     @SuppressWarnings("unchecked")
     public V remove(K key) {
         
-        if (key == null || !containsKey(key)) {
+        if (!containsKey(key)) {
             return null;
         }
         
@@ -161,14 +161,16 @@ public class HashTable<K, V> {
      * @return true if the element exists, false otherwise
      */
     public boolean containsKey(K key) {
-        
-        if (key == null) {
-            return false;
-        }
-        
+                
         int index = getIndex(key);
         
-        return table[index] != null ? true : false;
+        if (table[index] != null && 
+                ((table[index].getKey() == null && key == null) || 
+                (table[index].getKey() != null && table[index].getKey().equals(key)))) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**

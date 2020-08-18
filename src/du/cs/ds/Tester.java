@@ -15,6 +15,8 @@ public class Tester {
 		System.out.println(trie.search("call"));
 		System.out.println(trie.search("cat"));
 		System.out.println(trie.search("cast"));
+		System.out.println(trie.prefixExists("ca"));
+		System.out.println(trie.getSuggestionsByPrefix("ca"));
 	}
 
 }

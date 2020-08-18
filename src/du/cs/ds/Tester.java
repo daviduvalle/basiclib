@@ -3,13 +3,18 @@ package du.cs.ds;
 public class Tester {
 
 	public static void main(String[] args) {
-	    System.out.println("Test");
-	    BinarySearchTree<String> stringsTree = new BinarySearchTree<>();
-	    stringsTree.insert("b");
-	    stringsTree.insert("a");
-	    stringsTree.insert("c");
+		Trie trie = new Trie();
+		trie.insert("at");
+		trie.insert("and");
+		trie.insert("all");
+		trie.insert("bat");
+		trie.insert("can");
+		trie.insert("cat");
+		trie.insert("call");
 
-	    DynamicArray<String> array = stringsTree.inorder(stringsTree.getRoot());
+		System.out.println(trie.search("call"));
+		System.out.println(trie.search("cat"));
+		System.out.println(trie.search("cast"));
 	}
 
 }
